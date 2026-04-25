@@ -1,0 +1,20 @@
+{
+  "name": "edge-bundle-layer",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "vite --config ../../vite.config.local.mjs --open",
+    "start-local": "vite --config ../../vite.config.local.mjs"
+  },
+  "dependencies": {
+    "@deck.gl-community/edge-bundle-layers": "workspace:*",
+    "@deck.gl/core": "~9.3.0",
+    "@deck.gl/layers": "~9.3.0",
+    "@deck.gl/mapbox": "~9.3.0",
+    "maplibre-gl": "^4.1.3"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
+}

@@ -50,7 +50,7 @@
     "@luma.gl/webgl": "~9.3.2",
     "@testing-library/react": "^14.3.0",
     "@types/bin-pack": "^1.0.3",
-    "@vis.gl/dev-tools": "patch:@vis.gl/dev-tools@npm%3A1.0.1#~/.yarn/patches/@vis.gl-dev-tools-npm-1.0.1-f38d363810.patch",
+    "@vis.gl/dev-tools": "patch:@vis.gl/dev-tools@npm%3A1.0.1#./.yarn/patches/@vis.gl-dev-tools-npm-1.0.1-f38d363810.patch",
     "@vis.gl/ts-plugins": "^1.0.0",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/browser": "^4.0.18",
@@ -135,5 +135,5 @@
     "lint-pre-commit",
     "test"
   ],
-  "packageManager": "yarn@4.13.0"
+  "packageManager": "yarn@4.13.0+sha512.5c20ba010c99815433e5c8453112165e673f1c7948d8d2b267f4b5e52097538658388ebc9f9580656d9b75c5cc996f990f611f99304a2197d4c56d21eea370e7"
 }

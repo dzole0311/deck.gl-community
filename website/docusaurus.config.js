@@ -91,6 +91,7 @@ const config = {
             '@deck.gl-community/geo-layers': resolve('../modules/geo-layers/src'),
             '@deck.gl-community/graph-layers': resolve('../modules/graph-layers/src'),
             '@deck.gl-community/infovis-layers': resolve('../modules/infovis-layers/src'),
+            '@deck.gl-community/edge-bundle-layers': resolve('../modules/edge-bundle-layers/src'),
             '@deck.gl-community/timeline-layers': resolve('../dev/timeline-layers/src'),
             '@deck.gl-community/three': resolve('../modules/three/src'),
             '@deck.gl-community/react': resolve('../modules/react/src'),
