@@ -59,7 +59,7 @@ const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json
 
 const INITIAL_STATE: EdgeBundleDemoState = {
   datasetId: 'paperAirlines',
-  bundlingAlgorithm: 'spine',
+  bundlingAlgorithm: 'force-gpu',
   bundleStrength: 0.88,
   forceIterations: 10
 };
@@ -268,7 +268,7 @@ function buildLayers(
       id: 'edge-bundle-layer-halo',
       pickable: true,
       autoHighlight: true,
-      highlightColor: [31, 108, 196, 210],
+      highlightColor: [214, 62, 62, 215],
       onHover: onHoverEdge,
       rounded: true,
       capRounded: true,
@@ -311,7 +311,7 @@ function buildLayers(
       id: 'edge-bundle-layer-hot',
       pickable: true,
       autoHighlight: true,
-      highlightColor: [31, 108, 196, 210],
+      highlightColor: [214, 62, 62, 215],
       onHover: onHoverEdge,
       rounded: true,
       capRounded: true,
@@ -366,7 +366,7 @@ function appendHoverEndpointLayer(
       filled: true,
       getPosition: (node) => node.position,
       getRadius: (_node, {index}) => (index === 0 ? 7.2 : 6.6),
-      getFillColor: (_node, {index}) => (index === 0 ? [29, 112, 203, 220] : [52, 139, 223, 210]),
+      getFillColor: (_node, {index}) => (index === 0 ? [214, 62, 62, 225] : [228, 94, 94, 215]),
       getLineColor: [246, 250, 255, 240],
       lineWidthUnits: 'pixels',
       lineWidthMinPixels: 2
@@ -386,7 +386,7 @@ function appendHoverEndpointLayer(
       billboard: true,
       background: true,
       getBackgroundColor: [247, 251, 255, 210],
-      getBorderColor: [150, 182, 218, 220],
+      getBorderColor: [223, 142, 142, 220],
       borderWidth: 1,
       characterSet: 'auto'
     })
