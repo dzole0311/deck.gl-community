@@ -50,7 +50,7 @@
     "@luma.gl/webgl": "~9.3.2",
     "@testing-library/react": "^14.3.0",
     "@types/bin-pack": "^1.0.3",
-    "@vis.gl/dev-tools": "patch:@vis.gl/dev-tools@npm%3A1.0.1#~/.yarn/patches/@vis.gl-dev-tools-npm-1.0.1-f38d363810.patch",
+    "@vis.gl/dev-tools": "patch:@vis.gl/dev-tools@npm%3A1.0.1#./.yarn/patches/@vis.gl-dev-tools-npm-1.0.1-f38d363810.patch",
     "@vis.gl/ts-plugins": "^1.0.0",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/browser": "^4.0.18",
