@@ -316,6 +316,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@deck.gl-community/edge-bundle-layers@workspace:*, @deck.gl-community/edge-bundle-layers@workspace:modules/edge-bundle-layers":
+  version: 0.0.0-use.local
+  resolution: "@deck.gl-community/edge-bundle-layers@workspace:modules/edge-bundle-layers"
+  dependencies:
+    "@deck.gl/test-utils": "npm:~9.3.0"
+    "@probe.gl/test-utils": "npm:^4.0.4"
+  peerDependencies:
+    "@deck.gl/core": ~9.3.0
+    "@deck.gl/layers": ~9.3.0
+  languageName: unknown
+  linkType: soft
+
 "@deck.gl-community/editable-layers@workspace:*, @deck.gl-community/editable-layers@workspace:modules/editable-layers":
   version: 0.0.0-use.local
   resolution: "@deck.gl-community/editable-layers@workspace:modules/editable-layers"
@@ -458,6 +470,16 @@ __metadata:
     "@deck.gl/layers": ~9.3.0
     "@luma.gl/core": ~9.3.2
     "@luma.gl/engine": ~9.3.2
+  languageName: unknown
+  linkType: soft
+
+"@deck.gl-community/json@workspace:modules/json":
+  version: 0.0.0-use.local
+  resolution: "@deck.gl-community/json@workspace:modules/json"
+  dependencies:
+    typescript: "npm:~5.9.3"
+    vitest: "npm:^4.0.18"
+    zod: "npm:^4.0.0"
   languageName: unknown
   linkType: soft
 
@@ -7077,6 +7099,17 @@ __metadata:
   checksum: 10c0/6cf168bae1e2dad2e46561d9af9cbabfbf5ff592176ad4e9f0f41eaaf5fe5e10bb58147fe0a804de62b1ee9dad42c28810c88d652b21b6013c47ba8efa274ca1
   languageName: node
   linkType: hard
+
+"edge-bundle-layer@workspace:examples/layers/edge-bundle-layer":
+  version: 0.0.0-use.local
+  resolution: "edge-bundle-layer@workspace:examples/layers/edge-bundle-layer"
+  dependencies:
+    "@deck.gl-community/edge-bundle-layers": "workspace:*"
+    "@deck.gl/core": "npm:~9.3.0"
+    "@deck.gl/layers": "npm:~9.3.0"
+    vite: "npm:^7.3.1"
+  languageName: unknown
+  linkType: soft
 
 "editable-h3-cluster-layer-0285dd@workspace:examples/editable-layers/editable-h3-cluster-layer":
   version: 0.0.0-use.local
