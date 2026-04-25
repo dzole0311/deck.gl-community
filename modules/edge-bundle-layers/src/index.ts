@@ -4,7 +4,8 @@
 
 export {
   EdgeBundleLayer,
-  type EdgeBundleLayerProps
+  type EdgeBundleLayerProps,
+  type EdgeBundleRenderMode
 } from './edge-bundle-layer/edge-bundle-layer';
 
 export type {
