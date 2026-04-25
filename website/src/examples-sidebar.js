@@ -38,6 +38,7 @@ const sidebars = {
       type: 'category',
       label: '@deck.gl-community/layers',
       items: [
+        "layers/edge-bundle-layer",
         "layers/path-outline-and-markers",
         "layers/skybox-map-view",
         "layers/skybox-globe",
