@@ -1,0 +1,8 @@
+{
+  "type": "category",
+  "label": "@deck.gl-community/edge-bundle-layers",
+  "items": [
+    "modules/edge-bundle-layers/README",
+    "modules/edge-bundle-layers/api-reference/edge-bundle-layer"
+  ]
+}
