@@ -7,8 +7,9 @@ import {ScatterplotLayer, TextLayer} from '@deck.gl/layers';
 import type {PickingInfo} from '@deck.gl/core';
 import {
   EdgeBundleLayer,
-  type EdgeBundlingAlgorithm,
-  type EdgeBundleLayerProps
+  type EdgeBundleLayerProps,
+  type EdgeBundleRenderMode,
+  type EdgeBundlingAlgorithm
 } from '@deck.gl-community/edge-bundle-layers';
 import maplibregl from 'maplibre-gl';
 
@@ -53,6 +54,7 @@ type EdgeBundleDemoState = {
   bundlingAlgorithm: EdgeBundlingAlgorithm;
   bundleStrength: number;
   forceIterations: number;
+  renderMode: EdgeBundleRenderMode;
 };
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
@@ -61,7 +63,8 @@ const INITIAL_STATE: EdgeBundleDemoState = {
   datasetId: 'paperAirlines',
   bundlingAlgorithm: 'force-gpu',
   bundleStrength: 0.88,
-  forceIterations: 10
+  forceIterations: 10,
+  renderMode: 'path'
 };
 
 const BASE_EDGE_COLOR: [number, number, number, number] = [146, 186, 228, 172];
@@ -167,7 +170,7 @@ export function mountEdgeBundleLayerExample(container: HTMLElement): () => void 
     style: MAP_STYLE,
     center: [-98, 39.5],
     zoom: 3.4,
-    pitch: 35,
+    pitch: 0,
     bearing: 0
   });
   map.addControl(deckOverlay);
@@ -256,7 +259,8 @@ function buildLayers(
     bundleStrength: state.bundleStrength,
     forceIterations: effectiveForceIterations,
     forceStepSize: 0.1,
-    subdivisionCount: effectiveSubdivisionCount
+    subdivisionCount: effectiveSubdivisionCount,
+    renderMode: state.renderMode
   };
   const onHoverEdge = (info: PickingInfo<Edge>) => {
     onEdgeHover(info.object || null);
@@ -334,9 +338,12 @@ function buildLayers(
       pickable: true,
       radiusUnits: 'pixels',
       radiusMinPixels: 1,
-      radiusMaxPixels: 8,
+      radiusMaxPixels: 10,
       getPosition: (node) => node.position,
-      getRadius: (node) => (isHub(node) ? 4.8 : 1.9),
+      getRadius: (() => {
+        const maxDeg = Math.max(...data.nodes.map((n) => n.degree || 0), 1);
+        return (node: Node) => 1.5 + ((node.degree || 0) / maxDeg) * 7;
+      })(),
       getFillColor: (node) =>
         isHub(node)
           ? [46, 62, 84, 206]
@@ -459,7 +466,7 @@ function createControls(parent: HTMLDivElement, state: EdgeBundleDemoState, data
     panel,
     'Dataset',
     [
-      {value: 'paperAirlines', label: 'Paper airlines (GraphML)'},
+      {value: 'paperAirlines', label: 'US airlines (GraphML)'},
       {value: 'synthetic50', label: 'Synthetic 50 US cities'}
     ],
     state.datasetId
@@ -474,10 +481,19 @@ function createControls(parent: HTMLDivElement, state: EdgeBundleDemoState, data
     ],
     state.bundlingAlgorithm
   );
+  const renderModeSelect = createSelect(
+    panel,
+    'Render mode',
+    [
+      {value: 'path', label: 'path'},
+      {value: 'arc', label: 'arc'}
+    ],
+    state.renderMode
+  );
   parent.appendChild(panel);
 
   const listeners = new Set<() => void>();
-  bindControlEvents([datasetSelect, algorithmSelect], listeners);
+  bindControlEvents([datasetSelect, algorithmSelect, renderModeSelect], listeners);
   datasetSelect.addEventListener('change', () => {
     if (datasetSelect.value === 'paperAirlines') {
       algorithmSelect.value = 'force-gpu';
@@ -498,7 +514,8 @@ function createControls(parent: HTMLDivElement, state: EdgeBundleDemoState, data
         datasetId: datasetSelect.value as DemoDatasetId,
         bundlingAlgorithm: algorithmSelect.value as EdgeBundlingAlgorithm,
         bundleStrength: state.bundleStrength,
-        forceIterations: state.forceIterations
+        forceIterations: state.forceIterations,
+        renderMode: renderModeSelect.value as EdgeBundleRenderMode
       };
     },
     updateDatasetMeta,
@@ -607,6 +624,8 @@ function createSyntheticEdges(nodes: Node[]): Edge[] {
     addLocalWebEdges(edges, nodes, node, index);
     addSparseInterRegionEdge(edges, nodes, node, index);
   }
+  const routes = edges.map((e) => ({sourceId: e.source.id, targetId: e.target.id}));
+  applyRouteDegrees(nodes, routes);
   return enrichEdgesWithBundleLoad(edges);
 }
 
@@ -620,7 +639,7 @@ async function loadAirlinesDemoData(): Promise<DemoData> {
   const edges = createAirlinesEdges(nodes, routes);
   return {
     id: 'paperAirlines',
-    title: 'US airlines GraphML (paper-style benchmark)',
+    title: 'US airlines GraphML',
     nodes,
     edges,
     topBundleLoads: getTopBundleLoads(edges, 8)
