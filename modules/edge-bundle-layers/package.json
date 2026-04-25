@@ -1,0 +1,45 @@
+{
+  "name": "@deck.gl-community/edge-bundle-layers",
+  "version": "9.3.2",
+  "description": "Edge bundling layer pack for deck.gl",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "layers",
+    "visualization",
+    "gpu",
+    "deck.gl",
+    "edges",
+    "bundling"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test-watch": "vitest"
+  },
+  "peerDependencies": {
+    "@deck.gl/core": "~9.3.0",
+    "@deck.gl/layers": "~9.3.0"
+  },
+  "devDependencies": {
+    "@deck.gl/test-utils": "~9.3.0",
+    "@probe.gl/test-utils": "^4.0.4"
+  }
+}
