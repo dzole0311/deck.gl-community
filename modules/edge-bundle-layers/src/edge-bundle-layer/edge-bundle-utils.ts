@@ -270,14 +270,36 @@ function sampleSpineBundlePath<DataT>(
   const segments = Math.max(2, Math.round(subdivisionCount));
   const bundleFactor = clamp01(bundleStrength) * getBundleFactor(group.count);
   if (bundleFactor <= 0) {
-    return sampleQuadraticBezier(sample.source, sample.midpoint, sample.target, segments, sample.hasZ);
+    return sampleQuadraticBezier(
+      sample.source,
+      sample.midpoint,
+      sample.target,
+      segments,
+      sample.hasZ
+    );
   }
 
-  const sourceJoin = lerpVector(sample.source, group.sourceCenter, Math.min(1, bundleFactor * 0.94));
-  const targetJoin = lerpVector(sample.target, group.targetCenter, Math.min(1, bundleFactor * 0.94));
+  const sourceJoin = lerpVector(
+    sample.source,
+    group.sourceCenter,
+    Math.min(1, bundleFactor * 0.94)
+  );
+  const targetJoin = lerpVector(
+    sample.target,
+    group.targetCenter,
+    Math.min(1, bundleFactor * 0.94)
+  );
   const centerJoin = lerpVector(sample.midpoint, group.center, bundleFactor);
-  const sourceControl = lerpVector(midpoint(sample.source, sourceJoin), centerJoin, bundleFactor * 0.62);
-  const targetControl = lerpVector(midpoint(sample.target, targetJoin), centerJoin, bundleFactor * 0.62);
+  const sourceControl = lerpVector(
+    midpoint(sample.source, sourceJoin),
+    centerJoin,
+    bundleFactor * 0.62
+  );
+  const targetControl = lerpVector(
+    midpoint(sample.target, targetJoin),
+    centerJoin,
+    bundleFactor * 0.62
+  );
 
   return sampleTwoQuadraticBeziers(
     {
@@ -294,19 +316,30 @@ function sampleSpineBundlePath<DataT>(
 
 function computeForceDirectedBundledPaths<DataT>(
   edgeSamples: EdgeSample<DataT>[],
-  options: {subdivisionCount: number; bundleStrength: number; forceIterations: number; forceStepSize: number}
+  options: {
+    subdivisionCount: number;
+    bundleStrength: number;
+    forceIterations: number;
+    forceStepSize: number;
+  }
 ): EdgeBundlePath<DataT>[] {
   const pointCount = Math.max(4, Math.round(options.subdivisionCount) + 1);
-  let edgePoints = edgeSamples.map((sample) => createLinearPoints(sample.source, sample.target, pointCount));
+  let edgePoints = edgeSamples.map((sample) =>
+    createLinearPoints(sample.source, sample.target, pointCount)
+  );
   const compatibility = buildCompatibilityMatrix(edgeSamples, clamp01(options.bundleStrength));
   const totalIterations = Math.max(8, Math.round(options.forceIterations) * 8);
   let step = Math.max(0.00025, options.forceStepSize * 0.14);
 
   for (let iteration = 0; iteration < totalIterations; iteration++) {
-    const nextPoints = edgePoints.map((points) => points.map((point) => [...point] as [number, number, number]));
+    const nextPoints = edgePoints.map((points) =>
+      points.map((point) => [...point] as [number, number, number])
+    );
     for (let edgeIndex = 0; edgeIndex < edgeSamples.length; edgeIndex++) {
       const sample = edgeSamples[edgeIndex];
-      const kP = (0.12 + options.bundleStrength * 0.5) / Math.max(1e-4, sample.length * (pointCount - 1));
+      const kP =
+        (0.12 + options.bundleStrength * 0.5) /
+        Math.max(1e-4, Math.sqrt(sample.length) * (pointCount - 1));
       for (let pointIndex = 1; pointIndex < pointCount - 1; pointIndex++) {
         const currentPoint = edgePoints[edgeIndex][pointIndex];
         const springForce = addVectors(
@@ -328,7 +361,14 @@ function computeForceDirectedBundledPaths<DataT>(
           const attraction = Math.min(1.85, compat / (dist * dist));
           electroForce = addVectors(electroForce, scaleVector(toOther, attraction));
         }
-        const force = addVectors(springForce, electroForce);
+        const t = pointIndex / (pointCount - 1);
+        const straightPoint: [number, number, number] = [
+          lerp(sample.source[0], sample.target[0], t),
+          lerp(sample.source[1], sample.target[1], t),
+          lerp(sample.source[2], sample.target[2], t)
+        ];
+        const anchorForce = scaleVector(subtractVectors(straightPoint, currentPoint), kP * 0.3);
+        const force = addVectors(addVectors(springForce, electroForce), anchorForce);
         nextPoints[edgeIndex][pointIndex] = addVectors(currentPoint, scaleVector(force, step));
       }
     }
@@ -344,7 +384,12 @@ function computeForceDirectedBundledPaths<DataT>(
 
 function computeForceDirectedBundledPathsGpu<DataT>(
   edgeSamples: EdgeSample<DataT>[],
-  options: {subdivisionCount: number; bundleStrength: number; forceIterations: number; forceStepSize: number}
+  options: {
+    subdivisionCount: number;
+    bundleStrength: number;
+    forceIterations: number;
+    forceStepSize: number;
+  }
 ): EdgeBundlePath<DataT>[] {
   const fallback = () => computeForceDirectedBundledPaths(edgeSamples, options);
   const pointCount = Math.max(4, Math.round(options.subdivisionCount) + 1);
@@ -364,7 +409,11 @@ function computeForceDirectedBundledPathsGpu<DataT>(
     const path: EdgePosition[] = new Array(pointCount);
     for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
       const offset = (pointIndex * edgeSamples.length + edgeIndex) * 4;
-      const point: [number, number, number] = [simulated[offset + 0], simulated[offset + 1], simulated[offset + 2]];
+      const point: [number, number, number] = [
+        simulated[offset + 0],
+        simulated[offset + 1],
+        simulated[offset + 2]
+      ];
       path[pointIndex] = toEdgePosition(point, sample.hasZ);
     }
     return {edge: sample.edge, path};
@@ -390,16 +439,27 @@ function runForceSimulationOnGpu<DataT>(
     createForceFragmentShader(64),
     'force-gpu-force-program'
   );
-  const smoothProgram = createProgram(gl, FULLSCREEN_VERT, SMOOTH_FRAGMENT, 'force-gpu-smooth-program');
+  const smoothProgram = createProgram(
+    gl,
+    FULLSCREEN_VERT,
+    SMOOTH_FRAGMENT,
+    'force-gpu-smooth-program'
+  );
   if (!forceProgram || !smoothProgram) {
     return null;
   }
 
   const positionsData = createInitialPositionTextureData(edgeSamples, options.pointCount);
+  const edgeSpringData = createEdgeSpringTextureData(
+    edgeSamples,
+    options.springKScale,
+    options.pointCount
+  );
   const textures = createSimulationTextures(gl, {
     edgeCount,
     pointCount: options.pointCount,
     positionsData,
+    edgeSpringData,
     neighborData,
     neighborCount
   });
@@ -414,7 +474,6 @@ function runForceSimulationOnGpu<DataT>(
   let forceOutTex = textures.posB;
   let smoothOutTex = textures.posC;
   let step = options.step;
-  const springK = options.springKScale / Math.max(1e-4, options.pointCount - 1);
 
   gl.viewport(0, 0, edgeCount, options.pointCount);
   for (let iteration = 0; iteration < options.totalIterations; iteration++) {
@@ -422,20 +481,25 @@ function runForceSimulationOnGpu<DataT>(
       program: forceProgram,
       posTexture: readTex,
       neighborTexture: textures.neighbors,
+      edgeSpringTexture: textures.edgeSprings,
       outFramebuffer: forceOutTex.fbo,
       edgeCount,
       pointCount: options.pointCount,
       neighborCount,
       step,
-      springK,
       compatThreshold: 0.06
     });
     runSmoothPass(gl, smoothProgram, forceOutTex, smoothOutTex.fbo, {
       edgeCount,
       pointCount: options.pointCount
     });
-    const nextRead = smoothOutTex;
-    const nextForceOut = readTex;
+    // Second smooth pass (matches CPU double-smooth), writes into readTex which is now free
+    runSmoothPass(gl, smoothProgram, smoothOutTex, readTex.fbo, {
+      edgeCount,
+      pointCount: options.pointCount
+    });
+    const nextRead = readTex;
+    const nextForceOut = smoothOutTex;
     const nextSmoothOut = forceOutTex;
     readTex = nextRead;
     forceOutTex = nextForceOut;
@@ -485,12 +549,12 @@ function runForcePass(
     program: WebGLProgram;
     posTexture: SimulationTexture;
     neighborTexture: SimulationTexture;
+    edgeSpringTexture: SimulationTexture;
     outFramebuffer: WebGLFramebuffer;
     edgeCount: number;
     pointCount: number;
     neighborCount: number;
     step: number;
-    springK: number;
     compatThreshold: number;
   }
 ): void {
@@ -498,13 +562,14 @@ function runForcePass(
   gl.useProgram(params.program);
   bindTexture(gl, params.posTexture.texture, 0);
   bindTexture(gl, params.neighborTexture.texture, 1);
+  bindTexture(gl, params.edgeSpringTexture.texture, 2);
   setUniform1i(gl, params.program, 'uPositions', 0);
   setUniform1i(gl, params.program, 'uNeighbors', 1);
+  setUniform1i(gl, params.program, 'uEdgeSprings', 2);
   setUniform1i(gl, params.program, 'uEdgeCount', params.edgeCount);
   setUniform1i(gl, params.program, 'uPointCount', params.pointCount);
   setUniform1i(gl, params.program, 'uNeighborCount', params.neighborCount);
   setUniform1f(gl, params.program, 'uStep', params.step);
-  setUniform1f(gl, params.program, 'uSpringK', params.springK);
   setUniform1f(gl, params.program, 'uCompatThreshold', params.compatThreshold);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
@@ -535,6 +600,7 @@ type SimulationTextures = {
   posB: SimulationTexture;
   posC: SimulationTexture;
   neighbors: SimulationTexture;
+  edgeSprings: SimulationTexture;
 };
 
 function createSimulationTextures(
@@ -543,18 +609,35 @@ function createSimulationTextures(
     edgeCount: number;
     pointCount: number;
     positionsData: Float32Array;
+    edgeSpringData: Float32Array;
     neighborData: Float32Array;
     neighborCount: number;
   }
 ): SimulationTextures | null {
-  const posA = createTextureWithFramebuffer(gl, options.edgeCount, options.pointCount, options.positionsData);
+  const posA = createTextureWithFramebuffer(
+    gl,
+    options.edgeCount,
+    options.pointCount,
+    options.positionsData
+  );
   const posB = createTextureWithFramebuffer(gl, options.edgeCount, options.pointCount, null);
   const posC = createTextureWithFramebuffer(gl, options.edgeCount, options.pointCount, null);
-  const neighbors = createTextureWithFramebuffer(gl, options.edgeCount, options.neighborCount, options.neighborData);
-  if (!posA || !posB || !posC || !neighbors) {
+  const neighbors = createTextureWithFramebuffer(
+    gl,
+    options.edgeCount,
+    options.neighborCount,
+    options.neighborData
+  );
+  const edgeSprings = createTextureWithFramebuffer(
+    gl,
+    options.edgeCount,
+    1,
+    options.edgeSpringData
+  );
+  if (!posA || !posB || !posC || !neighbors || !edgeSprings) {
     return null;
   }
-  return {posA, posB, posC, neighbors};
+  return {posA, posB, posC, neighbors, edgeSprings};
 }
 
 function createTextureWithFramebuffer(
@@ -590,21 +673,49 @@ function bindTexture(gl: WebGL2RenderingContext, texture: WebGLTexture, unit: nu
   gl.bindTexture(gl.TEXTURE_2D, texture);
 }
 
-function setUniform1i(gl: WebGL2RenderingContext, program: WebGLProgram, name: string, value: number): void {
+function setUniform1i(
+  gl: WebGL2RenderingContext,
+  program: WebGLProgram,
+  name: string,
+  value: number
+): void {
   const loc = gl.getUniformLocation(program, name);
   if (loc !== null) {
     gl.uniform1i(loc, value);
   }
 }
 
-function setUniform1f(gl: WebGL2RenderingContext, program: WebGLProgram, name: string, value: number): void {
+function setUniform1f(
+  gl: WebGL2RenderingContext,
+  program: WebGLProgram,
+  name: string,
+  value: number
+): void {
   const loc = gl.getUniformLocation(program, name);
   if (loc !== null) {
     gl.uniform1f(loc, value);
   }
 }
 
-function createInitialPositionTextureData<DataT>(edgeSamples: EdgeSample<DataT>[], pointCount: number): Float32Array {
+function createEdgeSpringTextureData<DataT>(
+  edgeSamples: EdgeSample<DataT>[],
+  springKScale: number,
+  pointCount: number
+): Float32Array {
+  const data = new Float32Array(edgeSamples.length * 4);
+  const divisor = Math.max(1, pointCount - 1);
+  for (let i = 0; i < edgeSamples.length; i++) {
+    const kP = springKScale / Math.max(1e-4, Math.sqrt(edgeSamples[i].length) * divisor);
+    data[i * 4 + 0] = kP;
+    data[i * 4 + 3] = 1;
+  }
+  return data;
+}
+
+function createInitialPositionTextureData<DataT>(
+  edgeSamples: EdgeSample<DataT>[],
+  pointCount: number
+): Float32Array {
   const edgeCount = edgeSamples.length;
   const data = new Float32Array(edgeCount * pointCount * 4);
   for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
@@ -626,7 +737,11 @@ function createInitialPositionTextureData<DataT>(edgeSamples: EdgeSample<DataT>[
   return data;
 }
 
-function createNeighborTextureData(matrix: number[][], edgeCount: number, neighborCount: number): Float32Array {
+function createNeighborTextureData(
+  matrix: number[][],
+  edgeCount: number,
+  neighborCount: number
+): Float32Array {
   const data = new Float32Array(edgeCount * neighborCount * 4);
   for (let edgeIndex = 0; edgeIndex < edgeCount; edgeIndex++) {
     const neighbors: Array<{index: number; compat: number}> = [];
@@ -673,7 +788,10 @@ function createProgram(
   gl.shaderSource(frag, fragmentSource);
   gl.compileShader(vert);
   gl.compileShader(frag);
-  if (!gl.getShaderParameter(vert, gl.COMPILE_STATUS) || !gl.getShaderParameter(frag, gl.COMPILE_STATUS)) {
+  if (
+    !gl.getShaderParameter(vert, gl.COMPILE_STATUS) ||
+    !gl.getShaderParameter(frag, gl.COMPILE_STATUS)
+  ) {
     return null;
   }
   const program = gl.createProgram();
@@ -705,10 +823,12 @@ function cleanupSimulationResources(
   gl.deleteTexture(textures.posB.texture);
   gl.deleteTexture(textures.posC.texture);
   gl.deleteTexture(textures.neighbors.texture);
+  gl.deleteTexture(textures.edgeSprings.texture);
   gl.deleteFramebuffer(textures.posA.fbo);
   gl.deleteFramebuffer(textures.posB.fbo);
   gl.deleteFramebuffer(textures.posC.fbo);
   gl.deleteFramebuffer(textures.neighbors.fbo);
+  gl.deleteFramebuffer(textures.edgeSprings.fbo);
   if (vao) {
     gl.deleteVertexArray(vao);
   }
@@ -736,11 +856,11 @@ precision highp int;
 
 uniform sampler2D uPositions;
 uniform sampler2D uNeighbors;
+uniform sampler2D uEdgeSprings;
 uniform int uEdgeCount;
 uniform int uPointCount;
 uniform int uNeighborCount;
 uniform float uStep;
-uniform float uSpringK;
 uniform float uCompatThreshold;
 
 out vec4 fragColor;
@@ -755,9 +875,10 @@ void main() {
     return;
   }
 
+  float springK = texelFetch(uEdgeSprings, ivec2(edgeIndex, 0), 0).x;
   vec3 prevPoint = texelFetch(uPositions, ivec2(edgeIndex, pointIndex - 1), 0).xyz;
   vec3 nextPoint = texelFetch(uPositions, ivec2(edgeIndex, pointIndex + 1), 0).xyz;
-  vec3 springForce = ((prevPoint - currentPoint) + (nextPoint - currentPoint)) * uSpringK;
+  vec3 springForce = ((prevPoint - currentPoint) + (nextPoint - currentPoint)) * springK;
 
   vec3 electroForce = vec3(0.0);
   for (int j = 0; j < ${maxNeighbors}; j++) {
@@ -777,7 +898,13 @@ void main() {
     electroForce += toOther * attraction;
   }
 
-  vec3 force = springForce + electroForce;
+  vec3 edgeSource = texelFetch(uPositions, ivec2(edgeIndex, 0), 0).xyz;
+  vec3 edgeTarget = texelFetch(uPositions, ivec2(edgeIndex, uPointCount - 1), 0).xyz;
+  float t = float(pointIndex) / float(uPointCount - 1);
+  vec3 straightPoint = mix(edgeSource, edgeTarget, t);
+  vec3 anchorForce = (straightPoint - currentPoint) * (springK * 0.30);
+
+  vec3 force = springForce + electroForce + anchorForce;
   fragColor = vec4(currentPoint + force * uStep, 1.0);
 }
 `;
@@ -836,7 +963,8 @@ function getTotalCompatibility<DataT>(
   const avgLength = (edgeA.length + edgeB.length) / 2;
   const minLength = Math.min(edgeA.length, edgeB.length);
   const maxLength = Math.max(edgeA.length, edgeB.length);
-  const scaleCompatibility = (2 * minLength) / Math.max(1e-4, avgLength + maxLength / Math.max(1e-4, avgLength));
+  const scaleCompatibility =
+    (2 * minLength) / Math.max(1e-4, avgLength + maxLength / Math.max(1e-4, avgLength));
   const positionCompatibility = avgLength / (avgLength + distance(edgeA.midpoint, edgeB.midpoint));
   const visibilityCompatibility = Math.min(
     getVisibilityCompatibility(edgeA.source, edgeA.target, edgeB.midpoint),
@@ -883,7 +1011,11 @@ function createLinearPoints(
 ): [number, number, number][] {
   return Array.from({length: pointCount}, (_, pointIndex) => {
     const t = pointIndex / (pointCount - 1);
-    return [lerp(source[0], target[0], t), lerp(source[1], target[1], t), lerp(source[2], target[2], t)];
+    return [
+      lerp(source[0], target[0], t),
+      lerp(source[1], target[1], t),
+      lerp(source[2], target[2], t)
+    ];
   });
 }
 
@@ -892,9 +1024,15 @@ function smoothPoints(pointsByEdge: [number, number, number][][]): [number, numb
     const smoothed = points.map((point) => [...point] as [number, number, number]);
     for (let pointIndex = 1; pointIndex < points.length - 1; pointIndex++) {
       smoothed[pointIndex] = [
-        points[pointIndex - 1][0] * 0.25 + points[pointIndex][0] * 0.5 + points[pointIndex + 1][0] * 0.25,
-        points[pointIndex - 1][1] * 0.25 + points[pointIndex][1] * 0.5 + points[pointIndex + 1][1] * 0.25,
-        points[pointIndex - 1][2] * 0.25 + points[pointIndex][2] * 0.5 + points[pointIndex + 1][2] * 0.25
+        points[pointIndex - 1][0] * 0.25 +
+          points[pointIndex][0] * 0.5 +
+          points[pointIndex + 1][0] * 0.25,
+        points[pointIndex - 1][1] * 0.25 +
+          points[pointIndex][1] * 0.5 +
+          points[pointIndex + 1][1] * 0.25,
+        points[pointIndex - 1][2] * 0.25 +
+          points[pointIndex][2] * 0.5 +
+          points[pointIndex + 1][2] * 0.25
       ];
     }
     smoothed[0] = points[0];
@@ -957,8 +1095,20 @@ function sampleTwoQuadraticBeziers(
   const segments = Math.max(2, Math.round(subdivisionCount));
   const firstSegments = Math.max(1, Math.floor(segments / 2));
   const secondSegments = Math.max(1, segments - firstSegments);
-  const first = sampleQuadraticBezier(points.source, points.sourceControl, points.center, firstSegments, hasZ);
-  const second = sampleQuadraticBezier(points.center, points.targetControl, points.target, secondSegments, hasZ);
+  const first = sampleQuadraticBezier(
+    points.source,
+    points.sourceControl,
+    points.center,
+    firstSegments,
+    hasZ
+  );
+  const second = sampleQuadraticBezier(
+    points.center,
+    points.targetControl,
+    points.target,
+    secondSegments,
+    hasZ
+  );
   return [...first, ...second.slice(1)];
 }
 
@@ -993,7 +1143,10 @@ function toEdgePosition(position: [number, number, number], hasZ: boolean): Edge
   return hasZ ? [position[0], position[1], position[2]] : [position[0], position[1]];
 }
 
-function hasZCoordinate(source: [number, number, number], target: [number, number, number]): boolean {
+function hasZCoordinate(
+  source: [number, number, number],
+  target: [number, number, number]
+): boolean {
   return source[2] !== 0 || target[2] !== 0;
 }
 
@@ -1038,7 +1191,10 @@ function distance(a: [number, number, number], b: [number, number, number]): num
   return vectorLength(subtractVectors(a, b));
 }
 
-function midpoint(a: [number, number, number], b: [number, number, number]): [number, number, number] {
+function midpoint(
+  a: [number, number, number],
+  b: [number, number, number]
+): [number, number, number] {
   return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
 }
 
