@@ -1,0 +1,43 @@
+{
+  "name": "@deck.gl-community/json",
+  "version": "9.3.2",
+  "description": "Zod and JSON Schema catalog for deck.gl JSON specifications",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "deck.gl",
+    "json",
+    "schema",
+    "zod",
+    "visualization"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/visgl/deck.gl-community"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "test": "../../node_modules/.bin/vitest run modules/json/test/catalog.unit.spec.ts --config test/vitest.node.config.ts --root ../..",
+    "test-watch": "../../node_modules/.bin/vitest modules/json/test/catalog.unit.spec.ts --config test/vitest.node.config.ts --root ../.."
+  },
+  "dependencies": {
+    "zod": "^4.1.8"
+  }
+}

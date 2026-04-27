@@ -24,6 +24,8 @@ tsconfig.tsbuildinfo
 *.log
 .exit_code
 
+docs/modules/json/schema-architecture.md
+
 */**/yarn.lock
 !website/yarn.lock
 
